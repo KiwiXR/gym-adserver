@@ -41,7 +41,7 @@ class AdServerEnv(gym.Env):
         self.tot_gain_time_series = []
 
         # Environment OpenAI metadata
-        self.reward_range = (0, 1)
+        self.reward_range = (-0.5, 0.5)
         self.action_space = spaces.Discrete(num_ads)  # index of the selected ad
         self.observation_space = spaces.Box(low=0.0, high=np.inf, shape=(2, num_ads),
                                             dtype=np.float32)  # clicks and impressions, for each ad
