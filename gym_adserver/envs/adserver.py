@@ -8,17 +8,20 @@ from numpy.random.mtrand import RandomState
 
 import matplotlib
 import matplotlib.pyplot as plt
+
 matplotlib.rcParams['toolbar'] = 'None'
 
 from .ad import Ad
+
 
 class AdServerEnv(gym.Env):
     metadata = {
         'render.modes': ['human']
     }
 
-    def __init__(self, num_ads, time_series_frequency, reward_policy=None):        
-        self.time_series_frequency = time_series_frequency        
+    def __init__(self, num_ads: int, time_series_frequency: int, reward_policy=None):
+        self.scenario_name = None
+        self.time_series_frequency = time_series_frequency
         self.num_ads = num_ads
         self.reward_policy = reward_policy
         self.click_probabilities = None
@@ -32,10 +35,11 @@ class AdServerEnv(gym.Env):
 
         # Environment OpenAI metadata
         self.reward_range = (0, 1)
-        self.action_space = spaces.Discrete(num_ads) # index of the selected ad
-        self.observation_space = spaces.Box(low=0.0, high=np.inf, shape=(2, num_ads), dtype=np.float) # clicks and impressions, for each ad
+        self.action_space = spaces.Discrete(num_ads)  # index of the selected ad
+        self.observation_space = spaces.Box(low=0.0, high=np.inf, shape=(2, num_ads),
+                                            dtype=np.float32)  # clicks and impressions, for each ad
 
-    def step(self, action):
+    def step(self, action: int):
         ads, impressions, clicks = self.state
 
         # Update clicks (if any)
@@ -67,7 +71,7 @@ class AdServerEnv(gym.Env):
         self.ctr_time_series = []
         return self.state
 
-    def render(self, mode='human', freeze=False, output_file=None): # pragma: no cover
+    def render(self, mode: str = 'human', freeze: bool = False, output_file=None):  # pragma: no cover
         if mode != 'human':
             raise NotImplementedError
 
@@ -76,22 +80,22 @@ class AdServerEnv(gym.Env):
 
         logger.info('Scenario: {}, Impressions: {}, CTR: {}, Ads: {}'.format(self.scenario_name, impressions, ctr, ads))
 
-        fig = plt.figure(num=self.scenario_name,figsize=(9, 6))
+        fig = plt.figure(num=self.scenario_name, figsize=(9, 6))
         grid_size = (5, 2)
-        
+
         # Plot CTR time series 
         plt.subplot2grid(grid_size, (0, 0), rowspan=2, colspan=2)
         x = [i for i, _ in enumerate(self.ctr_time_series)]
-        y = self.ctr_time_series        
+        y = self.ctr_time_series
         axes = plt.gca()
-        axes.set_ylim([0,None])
+        axes.set_ylim([0, None])
         plt.xticks(x, [(i + 1) * self.time_series_frequency for i, _ in enumerate(x)])
         plt.ylabel("CTR")
         plt.xlabel("Impressions")
         plt.plot(x, y, marker='o')
-        for x,y in zip(x,y):
-            plt.annotate("{:.2f}".format(y), (x,y), textcoords="offset points", xytext=(0,10), ha='center')
-        
+        for x, y in zip(x, y):
+            plt.annotate("{:.2f}".format(y), (x, y), textcoords="offset points", xytext=(0, 10), ha='center')
+
         # Plot impressions
         plt.subplot2grid(grid_size, (2, 0), rowspan=3, colspan=1)
         x = [ad.id for ad in ads]
@@ -111,11 +115,11 @@ class AdServerEnv(gym.Env):
         x_pos_2 = [i + 0.4 for i, _ in enumerate(x)]
         plt.ylabel("Ads")
         plt.xlabel("")
-        plt.yticks(x_pos, x)        
+        plt.yticks(x_pos, x)
         plt.barh(x_pos, y, 0.4, label='Actual CTR')
         plt.barh(x_pos_2, y_2, 0.4, label='Probability')
         plt.legend(loc='upper right')
-                
+
         plt.tight_layout()
 
         if output_file is not None:
@@ -124,14 +128,14 @@ class AdServerEnv(gym.Env):
         if freeze:
             # Keep the plot window open
             # https://stackoverflow.com/questions/13975756/keep-a-figure-on-hold-after-running-a-script
-            if matplotlib.is_interactive(): 
+            if matplotlib.is_interactive():
                 plt.ioff()
             plt.show(block=True)
         else:
             plt.show(block=False)
-            plt.pause(0.001)                 
+            plt.pause(0.001)
 
-    def draw_click(self, action):
+    def draw_click(self, action: int):
         if self.reward_policy is not None:
             return self.reward_policy(action)
 

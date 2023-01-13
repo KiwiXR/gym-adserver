@@ -1,5 +1,10 @@
+from typing import TypeVar
+
+SelfAd = TypeVar('SelfAd', bound='Ad')
+
+
 class Ad:
-    def __init__(self, id, impressions=0, clicks=0):
+    def __init__(self, id: int, impressions: int = 0, clicks: int = 0):
         self.id = str(id)
         self.impressions = impressions
         self.clicks = clicks
@@ -14,9 +19,9 @@ class Ad:
 
     def __repr__(self):
         return "({0}/{1})".format(self.clicks, self.impressions)
-    
+
     def __str__(self):
         return "Ad: {0}, CTR: {1:.4f}".format(self.id, self.ctr())
 
-    def __eq__(self, other) : 
+    def __eq__(self, other: SelfAd):
         return self.id == other.id and self.impressions == other.impressions and self.clicks == other.clicks

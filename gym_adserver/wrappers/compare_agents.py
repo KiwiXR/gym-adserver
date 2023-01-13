@@ -9,16 +9,19 @@ from gym_adserver.agents.random_agent import RandomAgent
 from gym_adserver.agents.softmax_agent import SoftmaxAgent
 from gym_adserver.agents.ucb1_agent import UCB1Agent
 
+
 def setup_environment(env_name, num_ads, time_series_frequency):
     env = gym.make(env_name, num_ads=num_ads, time_series_frequency=time_series_frequency)
-    env.seed(args.seed)
+    # env.seed(args.seed)
     return env
+
 
 def render_environment(env, i, **kwargs):
     if kwargs['output_file'] is not None:
         kwargs['output_file'] = str(i) + "_" + kwargs['output_file']
     env.render(**kwargs)
     env.close()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -51,7 +54,7 @@ if __name__ == '__main__':
 
         # Simulation loop
         reward = 0
-        observation = env.reset(agent.name)
+        observation = env.reset(options={"scenario_name": agent.name})
         envs.append(env)
         for i in range(args.impressions):
             # Action/Feedback
@@ -60,4 +63,5 @@ if __name__ == '__main__':
 
     # Render result for each agent (NOTE: close all to quit)
     parallel = Parallel(n_jobs=-1)
-    parallel(delayed(render_environment)(env, i, freeze=True, output_file=args.output_file) for i, env in enumerate(envs))
+    parallel(
+        delayed(render_environment)(env, i, freeze=True, output_file=args.output_file) for i, env in enumerate(envs))
