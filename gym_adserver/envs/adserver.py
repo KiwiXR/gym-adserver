@@ -43,7 +43,23 @@ class AdServerEnv(gym.Env):
         # Environment OpenAI metadata
         self.reward_range = (-0.5, 0.5)
         self.action_space = spaces.Discrete(num_ads)  # index of the selected ad
-        self.observation_space = spaces.Box(low=0.0, high=np.inf, shape=(2, num_ads),
+        low = np.array(
+            [[
+                0.0,  # clicks
+                0.0,  # impressions
+                0.0,  # cpi
+                0.0,  # rpc
+            ] for _ in range(num_ads)]
+        )
+        high = np.array(
+            [[
+                np.finfo(np.float32).max,  # clicks
+                np.finfo(np.float32).max,  # impressions
+                0.5,  # cpi
+                1.0,  # rpc
+            ]]
+        )
+        self.observation_space = spaces.Box(low=low, high=high, shape=(num_ads, 4),
                                             dtype=np.float32)  # clicks and impressions, for each ad
 
     def _try_init_ads_info(self):
@@ -54,6 +70,16 @@ class AdServerEnv(gym.Env):
                 rpc = self.np_random.uniform() * 0.5 + cpi
                 self.ads_info.append({"cpi": cpi, "rpc": rpc})
         return self.ads_info
+
+    def _get_obs(self):
+        assert isinstance(self.state, tuple) and len(self.state) == 3
+        (ads, impressions, clicks) = self.state
+        obs = []
+        for ad in ads:
+            obs.append([ad.clicks, ad.impressions, ad.cpi, ad.rpc])
+        obs = np.asarray(obs, dtype=np.float32)
+        assert obs.shape == self.observation_space.shape
+        return obs
 
     def step(self, action: int):
         ads, impressions, clicks = self.state
@@ -80,8 +106,11 @@ class AdServerEnv(gym.Env):
             self.tot_gain_time_series.append(total_gain)
 
         self.state = (ads, impressions, clicks)
-
-        return self.state, reward, False, {}
+        observation = self._get_obs()
+        terminated = False
+        truncated = False
+        info = {}
+        return observation, reward, terminated, truncated, info
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
@@ -94,7 +123,8 @@ class AdServerEnv(gym.Env):
         self.ctr_time_series = []
         self.tot_gain_time_series = []
         self.avg_gain_time_series = []
-        return self.state
+        observation = self._get_obs()
+        return observation
 
     def render(self, mode: str = 'human', freeze: bool = False, show=False, output_file=None):  # pragma: no cover
         if mode != 'human':
@@ -102,9 +132,6 @@ class AdServerEnv(gym.Env):
 
         ads, impressions, clicks = self.state
         ctr = 0.0 if impressions == 0 else float(clicks / impressions)
-
-        total_gain = sum(ad.total_gain() for ad in ads)
-        avg_gain = 0.0 if impressions == 0 else float(total_gain / impressions)
 
         logger.info('Scenario: {}, Impressions: {}, CTR: {}, Ads: {}'.format(self.scenario_name, impressions, ctr, ads))
 
@@ -153,7 +180,7 @@ class AdServerEnv(gym.Env):
         x = [i for i, _ in enumerate(self.tot_gain_time_series)]
         y = self.tot_gain_time_series
         axes = plt.gca()
-        axes.set_ylim([0, None])
+        axes.set_ylim(auto=True)
         plt.xticks(x, [(i + 1) * self.time_series_frequency for i, _ in enumerate(x)])
         plt.ylabel("TotalGain")
         plt.xlabel("Impressions")
@@ -166,7 +193,7 @@ class AdServerEnv(gym.Env):
         x = [i for i, _ in enumerate(self.avg_gain_time_series)]
         y = self.avg_gain_time_series
         axes = plt.gca()
-        axes.set_ylim([0, None])
+        axes.set_ylim(auto=True)
         plt.xticks(x, [(i + 1) * self.time_series_frequency for i, _ in enumerate(x)])
         plt.ylabel("AverageGain")
         plt.xlabel("Impressions")
