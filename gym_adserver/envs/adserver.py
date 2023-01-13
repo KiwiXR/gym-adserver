@@ -21,7 +21,7 @@ class AdServerEnv(gym.Env):
         'render.modes': ['human']
     }
 
-    def __init__(self, num_ads: int = 10, time_series_frequency: int = 100, ads_info: List[Dict] = None,
+    def __init__(self, num_ads: int = 10, time_series_frequency: int = -1, ads_info: List[Dict] = None,
                  click_simulation: Callable = None):
         self.np_random = None
         self.scenario_name = None
@@ -103,7 +103,7 @@ class AdServerEnv(gym.Env):
         impressions += 1
 
         # Update the ctr time series (for rendering)
-        if impressions % self.time_series_frequency == 0:
+        if self.time_series_frequency > 0 and impressions % self.time_series_frequency == 0:
             ctr = 0.0 if impressions == 0 else float(clicks / impressions)
             self.ctr_time_series.append(ctr)
             total_gain = sum(ad.total_gain() for ad in ads)
@@ -132,6 +132,8 @@ class AdServerEnv(gym.Env):
 
     def render(self, mode: str = 'human', freeze: bool = False, show=False, output_file=None):  # pragma: no cover
         if mode != 'human':
+            raise NotImplementedError
+        if self.time_series_frequency <= 0:
             raise NotImplementedError
 
         ads, impressions, clicks = self.state
