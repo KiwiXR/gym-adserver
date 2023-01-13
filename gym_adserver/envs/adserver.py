@@ -22,17 +22,19 @@ class AdServerEnv(gym.Env):
     }
 
     def __init__(self, num_ads: int = 10, time_series_frequency: int = -1, ads_info: List[Dict] = None,
-                 click_simulation: Callable = None):
+                 click_simulation: Callable = None, seed: int = None):
         self.np_random = None
         self.scenario_name = None
         self.time_series_frequency = time_series_frequency
         self.num_ads = num_ads
         self.click_simulation = click_simulation
         self.click_probabilities = None
-        self.deterministic_ads_info = ads_info is not None
         self.ads_info = ads_info
-        self.seed()  # avoid error in initialization
-        self._try_init_ads_info()
+        self.seed(seed)  # avoid error in initialization
+        if seed is not None and ads_info is None:
+            self._init_ads_info()
+        self.deterministic_ads_info = ads_info is not None or seed is not None
+
         # Initial state (can be reset later)
         ads = [Ad(i, **self.ads_info[i]) for i in range(num_ads)]
         clicks = 0
@@ -64,13 +66,12 @@ class AdServerEnv(gym.Env):
         self.observation_space = spaces.Box(low=low, high=high, shape=(num_ads, 4),
                                             dtype=np.float32)  # clicks and impressions, for each ad
 
-    def _try_init_ads_info(self):
-        if not self.deterministic_ads_info:
-            self.ads_info = []
-            for _ in range(self.num_ads):
-                cpi = self.np_random.uniform() * 0.5
-                rpc = self.np_random.uniform() * 0.5 + cpi
-                self.ads_info.append({"cpi": cpi, "rpc": rpc})
+    def _init_ads_info(self):
+        self.ads_info = []
+        for _ in range(self.num_ads):
+            cpi = self.np_random.uniform() * 0.5
+            rpc = self.np_random.uniform() * 0.5 + cpi
+            self.ads_info.append({"cpi": cpi, "rpc": rpc})
         return self.ads_info
 
     def _get_obs(self):
@@ -119,7 +120,8 @@ class AdServerEnv(gym.Env):
 
     def reset(self, options=None):
         self.scenario_name = options["scenario_name"] if options is not None else "DefaultName"
-        self._try_init_ads_info()
+        if not self.deterministic_ads_info:
+            self._init_ads_info()
         ads = [Ad(i, **self.ads_info[i]) for i in range(self.num_ads)]
         clicks = 0
         impressions = 0
