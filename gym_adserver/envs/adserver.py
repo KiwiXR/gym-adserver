@@ -30,7 +30,7 @@ class AdServerEnv(gym.Env):
         self.click_probabilities = None
         self.deterministic_ads_info = ads_info is not None
         self.ads_info = ads_info
-
+        self.seed()  # avoid error in initialization
         self._try_init_ads_info()
         # Initial state (can be reset later)
         ads = [Ad(i, **self.ads_info[i]) for i in range(num_ads)]
