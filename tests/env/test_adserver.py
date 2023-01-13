@@ -53,6 +53,6 @@ def test_environment_step_with_reward():
     assert clicks == 1
     assert impressions == 1
     assert info == {}
-    assert reward == 0.3
+    assert reward == 1
     assert not done
     assert ads == [Ad(0, cpi=0.0, rpc=0.0), Ad(1, impressions=1, clicks=1, cpi=0.2, rpc=0.5)]
