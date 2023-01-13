@@ -57,7 +57,7 @@ class AdServerEnv(gym.Env):
                 np.finfo(np.float32).max,  # impressions
                 0.5,  # cpi
                 1.0,  # rpc
-            ]]
+            ] for _ in range(num_ads)]
         )
         self.observation_space = spaces.Box(low=low, high=high, shape=(num_ads, 4),
                                             dtype=np.float32)  # clicks and impressions, for each ad
