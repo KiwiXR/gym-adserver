@@ -19,7 +19,7 @@ def test_str():
     assert str(Ad(1, 100, 25, 0.1, 0.8)) == 'Ad: 1, CTR: 0.2500, TotGain: 10.0000, AvgGain: 0.1000'
 
 def test_repr():
-    assert repr(Ad(1, 100, 25, 0.1, 0.8)) == '(25/100)#cpi=0.1000#rpc=0.8000'
+    assert repr(Ad(1, 100, 25, 0.1, 0.8)) == '(25/100)#cpi=0.10#rpc=0.80'
 
 @pytest.mark.parametrize("impressions,clicks,expected", [
     (0, 0, 0),
