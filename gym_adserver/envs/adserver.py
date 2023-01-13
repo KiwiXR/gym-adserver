@@ -63,7 +63,7 @@ class AdServerEnv(gym.Env):
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
-        self.scenario_name = options["scenario_name"]
+        self.scenario_name = options["scenario_name"] if options is not None else "DefaultName"
         ads = [Ad(i) for i in range(self.num_ads)]
         clicks = 0
         impressions = 0
