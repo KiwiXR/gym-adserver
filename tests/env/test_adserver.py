@@ -8,6 +8,7 @@ import gym_adserver
 from gym_adserver.envs.ad import Ad
 from gym_adserver.envs.adserver import AdServerEnv
 
+
 def test_environment_reset():
     # Arrange 
     env = envs.make('AdServer-v0', num_ads=2, time_series_frequency=10)
@@ -20,6 +21,7 @@ def test_environment_reset():
     assert info["clicks"] == 0
     assert info["impressions"] == 0
     assert info["ads"] == [Ad(0), Ad(1)]
+
 
 def test_environment_step_no_reward():
     # Arrange
@@ -38,6 +40,7 @@ def test_environment_step_no_reward():
     assert reward == 0
     assert not done
     assert info["ads"] == [Ad(0, impressions=1, cpi=0.0, rpc=0.0), Ad(1, cpi=0.2, rpc=0.5)]
+
 
 def test_environment_step_with_reward():
     # Arrange

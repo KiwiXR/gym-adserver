@@ -7,6 +7,7 @@ import numpy as np
 from numpy.random.mtrand import RandomState
 
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -112,7 +113,7 @@ class AdServerEnv(gym.Env):
 
         self.state = (ads, impressions, clicks)
         observation = self._get_obs()
-        #info = {"ads": self.state[0], "impressions": self.state[1], "clicks": self.state[2]}
+        # info = {"ads": self.state[0], "impressions": self.state[1], "clicks": self.state[2]}
 
         return observation, reward, False, {}
 
