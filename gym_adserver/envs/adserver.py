@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict
 import gym
 from gym import logger, spaces
 from gym.utils import seeding
@@ -7,6 +7,7 @@ import numpy as np
 from numpy.random.mtrand import RandomState
 
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 matplotlib.rcParams['toolbar'] = 'None'
@@ -19,19 +20,24 @@ class AdServerEnv(gym.Env):
         'render.modes': ['human']
     }
 
-    def __init__(self, num_ads: int, time_series_frequency: int, reward_policy=None):
+    def __init__(self, num_ads: int, time_series_frequency: int, ads_info: List[Dict] = None, click_simulation=None):
         self.scenario_name = None
         self.time_series_frequency = time_series_frequency
         self.num_ads = num_ads
-        self.reward_policy = reward_policy
+        self.click_simulation = click_simulation
         self.click_probabilities = None
+        self.deterministic_ads_info = ads_info is not None
+        self.ads_info = ads_info
 
+        self._try_init_ads_info()
         # Initial state (can be reset later)
-        ads = [Ad(i) for i in range(num_ads)]
+        ads = [Ad(i, **self.ads_info[i]) for i in range(num_ads)]
         clicks = 0
         impressions = 0
         self.state = (ads, impressions, clicks)
         self.ctr_time_series = []
+        self.avg_gain_time_series = []
+        self.tot_gain_time_series = []
 
         # Environment OpenAI metadata
         self.reward_range = (0, 1)
@@ -39,14 +45,25 @@ class AdServerEnv(gym.Env):
         self.observation_space = spaces.Box(low=0.0, high=np.inf, shape=(2, num_ads),
                                             dtype=np.float32)  # clicks and impressions, for each ad
 
+    def _try_init_ads_info(self):
+        if not self.deterministic_ads_info:
+            self.ads_info = []
+            for _ in range(self.num_ads):
+                cpi = self.np_random.uniform() * 0.5
+                rpc = self.np_random.uniform() * 0.5 + cpi
+                self.ads_info.append({"cpi": cpi, "rpc": rpc})
+        return self.ads_info
+
     def step(self, action: int):
         ads, impressions, clicks = self.state
 
+        reward = - ads[action].cpi
         # Update clicks (if any)
-        reward = self.draw_click(action)
-        if reward == 1:
+        clicked = self._draw_click(action)
+        if clicked == 1:
             clicks += 1
             ads[action].clicks += 1
+            reward += ads[action].rpc
 
         # Update impressions
         ads[action].impressions += 1
@@ -56,6 +73,10 @@ class AdServerEnv(gym.Env):
         if impressions % self.time_series_frequency == 0:
             ctr = 0.0 if impressions == 0 else float(clicks / impressions)
             self.ctr_time_series.append(ctr)
+            total_gain = sum(ad.total_gain() for ad in ads)
+            avg_gain = 0.0 if impressions == 0 else float(total_gain / impressions)
+            self.avg_gain_time_series.append(avg_gain)
+            self.tot_gain_time_series.append(total_gain)
 
         self.state = (ads, impressions, clicks)
 
@@ -64,19 +85,25 @@ class AdServerEnv(gym.Env):
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
         self.scenario_name = options["scenario_name"] if options is not None else "DefaultName"
-        ads = [Ad(i) for i in range(self.num_ads)]
+        self._try_init_ads_info()
+        ads = [Ad(i, **self.ads_info[i]) for i in range(self.num_ads)]
         clicks = 0
         impressions = 0
         self.state = (ads, impressions, clicks)
         self.ctr_time_series = []
+        self.tot_gain_time_series = []
+        self.avg_gain_time_series = []
         return self.state
 
-    def render(self, mode: str = 'human', freeze: bool = False, output_file=None):  # pragma: no cover
+    def render(self, mode: str = 'human', freeze: bool = False, show=False, output_file=None):  # pragma: no cover
         if mode != 'human':
             raise NotImplementedError
 
         ads, impressions, clicks = self.state
         ctr = 0.0 if impressions == 0 else float(clicks / impressions)
+
+        total_gain = sum(ad.total_gain() for ad in ads)
+        avg_gain = 0.0 if impressions == 0 else float(total_gain / impressions)
 
         logger.info('Scenario: {}, Impressions: {}, CTR: {}, Ads: {}'.format(self.scenario_name, impressions, ctr, ads))
 
@@ -125,24 +152,25 @@ class AdServerEnv(gym.Env):
         if output_file is not None:
             fig.savefig(output_file)
 
-        if freeze:
-            # Keep the plot window open
-            # https://stackoverflow.com/questions/13975756/keep-a-figure-on-hold-after-running-a-script
-            if matplotlib.is_interactive():
-                plt.ioff()
-            plt.show(block=True)
-        else:
-            plt.show(block=False)
-            plt.pause(0.001)
+        if show:
+            if freeze:
+                # Keep the plot window open
+                # https://stackoverflow.com/questions/13975756/keep-a-figure-on-hold-after-running-a-script
+                if matplotlib.is_interactive():
+                    plt.ioff()
+                plt.show(block=True)
+            else:
+                plt.show(block=False)
+                plt.pause(0.001)
 
-    def draw_click(self, action: int):
-        if self.reward_policy is not None:
-            return self.reward_policy(action)
+    def _draw_click(self, action: int) -> bool:
+        if self.click_simulation is not None:
+            return self.click_simulation(action)
 
         if self.click_probabilities is None:
-            self.click_probabilities = [self.np_random.uniform() * 0.5 for i in range(self.num_ads)]
+            self.click_probabilities = [self.np_random.uniform() * 0.5 for _ in range(self.num_ads)]
 
-        return 1 if self.np_random.uniform() <= self.click_probabilities[action] else 0
+        return True if self.np_random.uniform() <= self.click_probabilities[action] else False
 
     def close(self):
         plt.close()
