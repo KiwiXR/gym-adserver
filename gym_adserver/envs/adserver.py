@@ -51,7 +51,7 @@ class AdServerEnv(gym.Env):
                 0.0,  # impressions
                 0.0,  # cpi
                 0.0,  # rpc
-            ] for _ in range(num_ads)]
+            ] for _ in range(num_ads)], dtype=np.float32
         )
         high = np.array(
             [[
@@ -59,7 +59,7 @@ class AdServerEnv(gym.Env):
                 np.inf,  # impressions
                 0.5,  # cpi
                 1.0,  # rpc
-            ] for _ in range(num_ads)]
+            ] for _ in range(num_ads)], dtype=np.float32
         )
         self.observation_space = spaces.Box(low=low, high=high, shape=(num_ads, 4),
                                             dtype=np.float32)  # clicks and impressions, for each ad
