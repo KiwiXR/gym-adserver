@@ -16,7 +16,7 @@ def test_init():
     assert ad.rpc == 0.8
 
 def test_str():
-    assert str(Ad(1, 100, 25, 0.1, 0.8)) == 'Ad: 1, CTR: 0.2500, TotGain: 0.1000, AvgGain: 0.8000'
+    assert str(Ad(1, 100, 25, 0.1, 0.8)) == 'Ad: 1, CTR: 0.2500, TotGain: 10.0000, AvgGain: 0.1000'
 
 def test_repr():
     assert repr(Ad(1, 100, 25, 0.1, 0.8)) == '(25/100)#cpi=0.1#rpc=0.8'
