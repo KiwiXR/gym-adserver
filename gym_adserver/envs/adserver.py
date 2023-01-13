@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Callable
 import gym
 from gym import logger, spaces
 from gym.utils import seeding
@@ -20,7 +20,8 @@ class AdServerEnv(gym.Env):
         'render.modes': ['human']
     }
 
-    def __init__(self, num_ads: int, time_series_frequency: int, ads_info: List[Dict] = None, click_simulation=None):
+    def __init__(self, num_ads: int, time_series_frequency: int, ads_info: List[Dict] = None,
+                 click_simulation: Callable = None):
         self.scenario_name = None
         self.time_series_frequency = time_series_frequency
         self.num_ads = num_ads

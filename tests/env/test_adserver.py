@@ -25,7 +25,7 @@ def test_environment_reset():
 def test_environment_step_no_reward():
     # Arrange
     env = envs.make('AdServer-v0', num_ads=2, time_series_frequency=10,
-                    ads_info=[{"cpi": 0.0, "rpc": 0.0}, {"cpi": 0.2, "rpc": 0.5}], reward_policy=lambda x: 0)
+                    ads_info=[{"cpi": 0.0, "rpc": 0.0}, {"cpi": 0.2, "rpc": 0.5}], click_simulation=lambda x: 0)
     env.reset(options={"scenario_name": 'Test'})
 
     # Act
@@ -43,7 +43,7 @@ def test_environment_step_no_reward():
 def test_environment_step_with_reward():
     # Arrange
     env = envs.make('AdServer-v0', num_ads=2, time_series_frequency=10,
-                    ads_info=[{"cpi": 0.0, "rpc": 0.0}, {"cpi": 0.2, "rpc": 0.5}], reward_policy=lambda x: 1)
+                    ads_info=[{"cpi": 0.0, "rpc": 0.0}, {"cpi": 0.2, "rpc": 0.5}], click_simulation=lambda x: 1)
     env.reset(options={"scenario_name": 'Test'})
 
     # Act
