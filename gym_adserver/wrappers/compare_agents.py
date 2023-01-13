@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
         # Simulation loop
         reward = 0
-        observation = env.reset(agent.name)
+        observation = env.reset(options={"scenario_name": agent.name})
         envs.append(env)
         for i in range(args.impressions):
             # Action/Feedback
