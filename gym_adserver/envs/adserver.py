@@ -108,8 +108,8 @@ class AdServerEnv(gym.Env):
 
         logger.info('Scenario: {}, Impressions: {}, CTR: {}, Ads: {}'.format(self.scenario_name, impressions, ctr, ads))
 
-        fig = plt.figure(num=self.scenario_name, figsize=(9, 6))
-        grid_size = (5, 2)
+        fig = plt.figure(num=self.scenario_name, figsize=(9, 12))
+        grid_size = (9, 2)
 
         # Plot CTR time series 
         plt.subplot2grid(grid_size, (0, 0), rowspan=2, colspan=2)
@@ -147,6 +147,32 @@ class AdServerEnv(gym.Env):
         plt.barh(x_pos, y, 0.4, label='Actual CTR')
         plt.barh(x_pos_2, y_2, 0.4, label='Probability')
         plt.legend(loc='upper right')
+
+        # Plot total gain time series
+        plt.subplot2grid(grid_size, (5, 0), rowspan=2, colspan=2)
+        x = [i for i, _ in enumerate(self.tot_gain_time_series)]
+        y = self.tot_gain_time_series
+        axes = plt.gca()
+        axes.set_ylim([0, None])
+        plt.xticks(x, [(i + 1) * self.time_series_frequency for i, _ in enumerate(x)])
+        plt.ylabel("TotalGain")
+        plt.xlabel("Impressions")
+        plt.plot(x, y, marker='o')
+        for x, y in zip(x, y):
+            plt.annotate("{:.2f}".format(y), (x, y), textcoords="offset points", xytext=(0, 10), ha='center')
+
+        # Plot average gain time series
+        plt.subplot2grid(grid_size, (7, 0), rowspan=2, colspan=2)
+        x = [i for i, _ in enumerate(self.avg_gain_time_series)]
+        y = self.avg_gain_time_series
+        axes = plt.gca()
+        axes.set_ylim([0, None])
+        plt.xticks(x, [(i + 1) * self.time_series_frequency for i, _ in enumerate(x)])
+        plt.ylabel("AverageGain")
+        plt.xlabel("Impressions")
+        plt.plot(x, y, marker='o')
+        for x, y in zip(x, y):
+            plt.annotate("{:.2f}".format(y), (x, y), textcoords="offset points", xytext=(0, 10), ha='center')
 
         plt.tight_layout()
 
