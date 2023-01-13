@@ -21,7 +21,7 @@ class AdServerEnv(gym.Env):
         'render.modes': ['human']
     }
 
-    def __init__(self, num_ads: int, time_series_frequency: int, ads_info: List[Dict] = None,
+    def __init__(self, num_ads: int = 10, time_series_frequency: int = 100, ads_info: List[Dict] = None,
                  click_simulation: Callable = None):
         self.np_random = None
         self.scenario_name = None
