@@ -31,9 +31,10 @@ class AdServerEnv(gym.Env):
         self.click_probabilities = None
         self.ads_info = ads_info
         self.seed(seed)  # avoid error in initialization
-        if seed is not None and ads_info is None:
-            self._init_ads_info()
+
         self.deterministic_ads_info = ads_info is not None or seed is not None
+        if ads_info is None:
+            self._init_ads_info()
 
         # Initial state (can be reset later)
         ads = [Ad(i, **self.ads_info[i]) for i in range(num_ads)]
@@ -87,6 +88,14 @@ class AdServerEnv(gym.Env):
     def seed(self, seed=None):  # pragma: no cover
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+    def real_reward_range(self):
+        assert self.ads_info is not None
+        max_gain, max_lose = -1, -1
+        for ad_info in self.ads_info:
+            max_gain = max(max_gain, ad_info["rpc"] - ad_info["cpi"])
+            max_lose = max(max_lose, ad_info["cpi"])
+        return - max_lose, max_gain
 
     def step(self, action: int):
         ads, impressions, clicks = self.state
