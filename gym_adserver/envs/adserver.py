@@ -109,7 +109,7 @@ class AdServerEnv(gym.Env):
         observation = self._get_obs()
         terminated = False
         truncated = False
-        info = {}
+        info = {"ads": self.state[0], "impressions": self.state[1], "clicks": self.state[2]}
         return observation, reward, terminated, truncated, info
 
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
@@ -124,7 +124,8 @@ class AdServerEnv(gym.Env):
         self.tot_gain_time_series = []
         self.avg_gain_time_series = []
         observation = self._get_obs()
-        return observation
+        info = {"ads": self.state[0], "impressions": self.state[1], "clicks": self.state[2]}
+        return observation, info
 
     def render(self, mode: str = 'human', freeze: bool = False, show=False, output_file=None):  # pragma: no cover
         if mode != 'human':
