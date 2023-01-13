@@ -36,7 +36,7 @@ class Ad:
         return self.ctr() * self.rpc - (self.impressions != 0) * self.cpi
 
     def __repr__(self):
-        return "({0}/{1}@cpi{2}#rpc{3})".format(self.clicks, self.impressions, self.cpi, self.rpc)
+        return "({0}/{1})#cpi={2}#rpc={3})".format(self.clicks, self.impressions, self.cpi, self.rpc)
 
     def __str__(self):
         return "Ad: {0}, CTR: {1:.4f}, TotGain: {1:.4f}, AvgGain: {1:.4f}".format(self.id, self.ctr(), 
