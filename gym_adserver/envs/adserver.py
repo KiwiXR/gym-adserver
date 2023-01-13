@@ -53,8 +53,8 @@ class AdServerEnv(gym.Env):
         )
         high = np.array(
             [[
-                np.finfo(np.float32).max,  # clicks
-                np.finfo(np.float32).max,  # impressions
+                np.inf,  # clicks
+                np.inf,  # impressions
                 0.5,  # cpi
                 1.0,  # rpc
             ] for _ in range(num_ads)]
